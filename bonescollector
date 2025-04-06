@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BonesCollector</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0f0f0f;
+      color: #fff;
+      text-align: center;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background: #1a1a1a;
+      padding: 2rem;
+      border-radius: 10px;
+    }
+    input, button {
+      padding: 0.8rem;
+      margin-top: 1rem;
+      border: none;
+      border-radius: 5px;
+    }
+    input {
+      width: 100%;
+    }
+    button {
+      background-color: #6e44ff;
+      color: white;
+      cursor: pointer;
+    }
+    .success {
+      color: #4caf50;
+      margin-top: 1rem;
+    }
+    .error {
+      color: #f44336;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💀 BonesCollector 💀</h1>
+    <p>Connect your wallet and submit your Monad Testnet address</p>
+    <button id="connectWallet">Connect Wallet</button>
+    <div id="walletInfo" style="margin-top: 1rem;"></div>
+    <input type="text" id="addressInput" placeholder="Enter your wallet address" />
+    <button onclick="submitAddress()">Submit Address</button>
+    <div id="message"></div>
+  </div>
+
+  <script>
+    let connectedAddress = "";
+    let submittedAddresses = new Set();
+
+    async function connectWallet() {
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          connectedAddress = accounts[0];
+          document.getElementById('walletInfo').innerText = `Connected: ${connectedAddress}`;
+        } catch (err) {
+          document.getElementById('message').innerHTML = `<p class='error'>Wallet connection failed.</p>`;
+        }
+      } else {
+        document.getElementById('message').innerHTML = `<p class='error'>Please install MetaMask or a compatible wallet.</p>`;
+      }
+    }
+
+    function isValidMonadAddress(address) {
+      // Monad EVM-like address format: 0x + 40 hex characters
+      return /^0x[a-fA-F0-9]{40}$/.test(address);
+    }
+
+    function submitAddress() {
+      const inputAddress = document.getElementById('addressInput').value.trim();
+
+      if (!connectedAddress || connectedAddress.toLowerCase() !== inputAddress.toLowerCase()) {
+        document.getElementById('message').innerHTML = `<p class='error'>You must connect your wallet and match the address exactly.</p>`;
+        return;
+      }
+
+      if (!isValidMonadAddress(inputAddress)) {
+        document.getElementById('message').innerHTML = `<p class='error'>Invalid address. Only Monad-compatible EVM addresses are allowed.</p>`;
+        return;
+      }
+
+      if (submittedAddresses.has(inputAddress.toLowerCase())) {
+        document.getElementById('message').innerHTML = `<p class='error'>This address has already been submitted.</p>`;
+        return;
+      }
+
+      submittedAddresses.add(inputAddress.toLowerCase());
+      document.getElementById('message').innerHTML = `<p class='success'>Address submitted successfully!</p>`;
+      document.getElementById('addressInput').value = '';
+    }
+
+    document.getElementById("connectWallet").addEventListener("click", connectWallet);
+  </script>
+</body>
+</html>
